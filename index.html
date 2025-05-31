@@ -1,0 +1,360 @@
+c:\Users\brian\OneDrive\Pictures\srev token logo.png <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Coin (SRV) Staking Portal</title>
+    <link rel="icon" href="srev-favicon.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js" type="application/javascript"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f1eb; /* Warm Neutral Background */
+        }
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn-primary {
+            background-color: #0891b2; /* Cyan */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0e7490;
+        }
+        .btn-secondary {
+            background-color: #d97706; /* Amber */
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #b45309;
+        }
+        .btn-tertiary {
+            background-color: #7c3aed; /* Purple */
+            color: white;
+        }
+         .btn-tertiary:hover {
+            background-color: #6d28d9;
+        }
+        .btn-disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="app" class="min-h-screen container mx-auto p-4 md:p-8">
+        
+        <header class="text-center mb-10">
+            <img id="logo-header" src="https://storage.googleapis.com/gemini-generative-ai-hackathon/srev%20token%20logo.jpg" alt="SREV Character Logo" class="h-24 w-auto mx-auto mb-4"/>
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-800">Service Coin Staking</h1>
+            <p class="text-slate-600 mt-2">Stake SRV, earn SREV, and claim real revenue rewards in USDC.</p>
+        </header>
+
+        <div id="wallet-section" class="max-w-2xl mx-auto mb-10">
+            <button id="connect-button" class="w-full text-lg font-semibold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 btn-primary">Connect Wallet</button>
+            <div id="wallet-info" class="hidden glass-card p-4 rounded-lg text-center">
+                <p class="text-slate-700">Status: <span class="font-bold text-green-600">Connected</span></p>
+                <p class="text-slate-700 text-sm mt-1">Network: <span id="network-name" class="font-mono bg-slate-200 px-2 py-1 rounded"></span></p>
+                <p class="text-slate-700 text-sm mt-1">Account: <span id="account-address" class="font-mono bg-slate-200 px-2 py-1 rounded"></span></p>
+            </div>
+        </div>
+
+        <main id="main-content" class="hidden">
+            <section id="balances-section" class="mb-10">
+                <h2 class="text-2xl font-bold text-slate-700 mb-4 text-center">Your Assets</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                    <div class="glass-card p-6 rounded-lg text-center">
+                        <h3 class="text-slate-600 mb-2">SRV Balance</h3>
+                        <p class="text-3xl font-bold text-slate-800"><span id="srv-balance">0.00</span></p>
+                    </div>
+                    <div class="glass-card p-6 rounded-lg text-center">
+                        <h3 class="text-slate-600 mb-2">SREV (Staked)</h3>
+                        <p class="text-3xl font-bold text-slate-800"><span id="srev-balance">0.00</span></p>
+                    </div>
+                    <div class="glass-card p-6 rounded-lg text-center">
+                        <h3 class="text-slate-600 mb-2">Claimable USDC</h3>
+                        <p class="text-3xl font-bold text-green-600"><span id="usdc-rewards">0.00</span></p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="actions-section">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div class="glass-card p-8 rounded-lg">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4">1. Stake SRV</h3>
+                        <p class="text-slate-600 mb-6">Enter the amount of SRV you wish to stake. You must approve the contract to spend your SRV first.</p>
+                        <div class="flex flex-col space-y-4">
+                            <input type="number" id="stake-amount" placeholder="Amount of SRV" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-cyan-500 outline-none">
+                            <button id="approve-button" class="w-full text-lg font-semibold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 btn-secondary">Approve</button>
+                            <button id="stake-button" class="w-full text-lg font-semibold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 btn-primary btn-disabled" disabled>Stake</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-8">
+                        <div class="glass-card p-8 rounded-lg">
+                            <h3 class="text-2xl font-bold text-slate-800 mb-4">2. Unstake SREV</h3>
+                             <p class="text-slate-600 mb-6">Enter the amount of SREV you wish to unstake to receive your SRV back 1:1.</p>
+                             <div class="flex flex-col space-y-4">
+                                <input type="number" id="unstake-amount" placeholder="Amount of SREV" class="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-cyan-500 outline-none">
+                                <button id="unstake-button" class="w-full text-lg font-semibold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 btn-primary">Unstake</button>
+                            </div>
+                        </div>
+                        <div class="glass-card p-8 rounded-lg">
+                             <h3 class="text-2xl font-bold text-slate-800 mb-4">3. Claim Rewards</h3>
+                             <p class="text-slate-600 mb-6">Claim your accumulated USDC rewards from the revenue pool.</p>
+                             <button id="claim-button" class="w-full text-lg font-semibold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 btn-tertiary">Claim USDC</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <div id="message-box" class="hidden fixed bottom-5 right-5 max-w-sm p-4 rounded-lg shadow-lg text-white">
+            <p id="message-text"></p>
+        </div>
+
+    </div>
+
+    <script>
+        const App = {
+            // --- State ---
+            provider: null,
+            signer: null,
+            account: null,
+            contracts: {
+                srv: null,
+                srev: null,
+                stakingVault: null,
+                rewardDistributor: null,
+            },
+            
+            // --- Configuration ---
+            addresses: {
+                srv: '0x057ba66c2109Fd4487F0781E0203B71fd77a6341',
+                srev: '0x2F745Da2FA453ee76c756fADcc081f59284B2a40',
+                stakingVault: '0x691e29E98ECDc5ae948355F30102cD4D637eddB7',
+                rewardDistributor: '0x71f618EFb0422687e5B2ad9cD973aDACb645D9DE',
+            },
+            abis: {
+                erc20: [
+                    "function name() view returns (string)",
+                    "function symbol() view returns (string)",
+                    "function decimals() view returns (uint8)",
+                    "function balanceOf(address account) view returns (uint256)",
+                    "function allowance(address owner, address spender) view returns (uint256)",
+                    "function approve(address spender, uint256 amount) returns (bool)",
+                ],
+                stakingVault: [
+                    "function stake(uint256 amount) external",
+                    "function unstake(uint256 amount) external",
+                ],
+                rewardDistributor: [
+                    "function earned(address account) view returns (uint256)",
+                    "function claimReward() external",
+                ],
+            },
+
+            // --- Initialization ---
+            init() {
+                this.elements = {
+                    connectButton: document.getElementById('connect-button'),
+                    walletInfo: document.getElementById('wallet-info'),
+                    networkName: document.getElementById('network-name'),
+                    accountAddress: document.getElementById('account-address'),
+                    mainContent: document.getElementById('main-content'),
+                    srvBalance: document.getElementById('srv-balance'),
+                    srevBalance: document.getElementById('srev-balance'),
+                    usdcRewards: document.getElementById('usdc-rewards'),
+                    stakeAmountInput: document.getElementById('stake-amount'),
+                    approveButton: document.getElementById('approve-button'),
+                    stakeButton: document.getElementById('stake-button'),
+                    unstakeAmountInput: document.getElementById('unstake-amount'),
+                    unstakeButton: document.getElementById('unstake-button'),
+                    claimButton: document.getElementById('claim-button'),
+                    messageBox: document.getElementById('message-box'),
+                    messageText: document.getElementById('message-text'),
+                };
+                this.addEventListeners();
+            },
+
+            addEventListeners() {
+                this.elements.connectButton.addEventListener('click', () => this.connectWallet());
+                this.elements.approveButton.addEventListener('click', () => this.approve());
+                this.elements.stakeButton.addEventListener('click', () => this.stake());
+                this.elements.unstakeButton.addEventListener('click', () => this.unstake());
+                this.elements.claimButton.addEventListener('click', () => this.claim());
+                this.elements.stakeAmountInput.addEventListener('input', () => this.checkAllowance());
+            },
+
+            // --- Wallet & Contract Logic ---
+            async connectWallet() {
+                if (typeof window.ethereum === 'undefined') {
+                    return this.showMessage('MetaMask is not installed. Please install it to use this dApp.', 'error');
+                }
+                try {
+                    this.provider = new ethers.providers.Web3Provider(window.ethereum);
+                    await this.provider.send("eth_requestAccounts", []);
+                    this.signer = this.provider.getSigner();
+                    this.account = await this.signer.getAddress();
+                    const network = await this.provider.getNetwork();
+
+                    this.initContracts();
+                    this.updateUIForConnection(this.account, network);
+                    this.fetchAllData();
+                    this.showMessage('Wallet connected successfully!', 'success');
+                } catch (error) {
+                    console.error("Connection failed:", error);
+                    this.showMessage(error.message || 'User rejected the connection request.', 'error');
+                }
+            },
+
+            initContracts() {
+                this.contracts.srv = new ethers.Contract(this.addresses.srv, this.abis.erc20, this.signer);
+                this.contracts.srev = new ethers.Contract(this.addresses.srev, this.abis.erc20, this.signer);
+                this.contracts.stakingVault = new ethers.Contract(this.addresses.stakingVault, this.abis.stakingVault, this.signer);
+                this.contracts.rewardDistributor = new ethers.Contract(this.addresses.rewardDistributor, this.abis.rewardDistributor, this.signer);
+            },
+            
+            async fetchAllData() {
+                if (!this.account) return;
+                try {
+                    const [srvBal, srevBal, rewards] = await Promise.all([
+                        this.contracts.srv.balanceOf(this.account),
+                        this.contracts.srev.balanceOf(this.account),
+                        this.contracts.rewardDistributor.earned(this.account)
+                    ]);
+                    
+                    this.elements.srvBalance.innerText = parseFloat(ethers.utils.formatUnits(srvBal, 18)).toFixed(4);
+                    this.elements.srevBalance.innerText = parseFloat(ethers.utils.formatUnits(srevBal, 18)).toFixed(4);
+                    this.elements.usdcRewards.innerText = parseFloat(ethers.utils.formatUnits(rewards, 6)).toFixed(4); // USDC typically has 6 decimals
+
+                    this.checkAllowance();
+                } catch (error) {
+                    console.error("Error fetching data:", error);
+                    this.showMessage('Could not fetch account data. Make sure you are on the correct network.', 'error');
+                }
+            },
+            
+            async checkAllowance() {
+                if (!this.account || !this.elements.stakeAmountInput.value) {
+                    this.elements.stakeButton.disabled = true;
+                    this.elements.stakeButton.classList.add('btn-disabled');
+                    return;
+                }
+                const stakeAmount = ethers.utils.parseUnits(this.elements.stakeAmountInput.value || '0', 18);
+                const allowance = await this.contracts.srv.allowance(this.account, this.addresses.stakingVault);
+                
+                if (allowance.gte(stakeAmount)) {
+                    this.elements.stakeButton.disabled = false;
+                    this.elements.stakeButton.classList.remove('btn-disabled');
+                } else {
+                    this.elements.stakeButton.disabled = true;
+                    this.elements.stakeButton.classList.add('btn-disabled');
+                }
+            },
+
+            // --- User Actions ---
+            async approve() {
+                const amount = this.elements.stakeAmountInput.value;
+                if (!amount || parseFloat(amount) <= 0) {
+                    return this.showMessage('Please enter a valid amount to approve.', 'error');
+                }
+                this.showMessage('Requesting approval from your wallet...', 'info');
+                try {
+                    const amountToApprove = ethers.utils.parseUnits(amount, 18);
+                    const tx = await this.contracts.srv.approve(this.addresses.stakingVault, amountToApprove);
+                    await tx.wait();
+                    this.showMessage('Approval successful!', 'success');
+                    this.checkAllowance();
+                } catch (error) {
+                    console.error("Approval error:", error);
+                    this.showMessage('Approval failed. Check the console for details.', 'error');
+                }
+            },
+            
+            async stake() {
+                 const amount = this.elements.stakeAmountInput.value;
+                if (!amount || parseFloat(amount) <= 0) {
+                    return this.showMessage('Please enter a valid amount to stake.', 'error');
+                }
+                this.showMessage('Processing your stake transaction...', 'info');
+                try {
+                    const amountToStake = ethers.utils.parseUnits(amount, 18);
+                    const tx = await this.contracts.stakingVault.stake(amountToStake);
+                    await tx.wait();
+                    this.showMessage('Staking successful!', 'success');
+                    this.elements.stakeAmountInput.value = '';
+                    this.fetchAllData();
+                } catch (error) {
+                    console.error("Staking error:", error);
+                    this.showMessage('Staking failed. Check the console for details.', 'error');
+                }
+            },
+            
+            async unstake() {
+                 const amount = this.elements.unstakeAmountInput.value;
+                if (!amount || parseFloat(amount) <= 0) {
+                    return this.showMessage('Please enter a valid amount to unstake.', 'error');
+                }
+                this.showMessage('Processing your unstake transaction...', 'info');
+                try {
+                    const amountToUnstake = ethers.utils.parseUnits(amount, 18);
+                    const tx = await this.contracts.stakingVault.unstake(amountToUnstake);
+                    await tx.wait();
+                    this.showMessage('Unstaking successful!', 'success');
+                    this.elements.unstakeAmountInput.value = '';
+                    this.fetchAllData();
+                } catch (error) {
+                    console.error("Unstaking error:", error);
+                    this.showMessage('Unstaking failed. Check the console for details.', 'error');
+                }
+            },
+            
+            async claim() {
+                this.showMessage('Processing your claim transaction...', 'info');
+                try {
+                    const tx = await this.contracts.rewardDistributor.claimReward();
+                    await tx.wait();
+                    this.showMessage('Rewards claimed successfully!', 'success');
+                    this.fetchAllData();
+                } catch (error) {
+                    console.error("Claim error:", error);
+                    this.showMessage('Claim failed. Check the console for details.', 'error');
+                }
+            },
+
+            // --- UI Updates ---
+            updateUIForConnection(address, network) {
+                this.elements.connectButton.classList.add('hidden');
+                this.elements.walletInfo.classList.remove('hidden');
+                this.elements.mainContent.classList.remove('hidden');
+                this.elements.networkName.innerText = `${network.name} (ID: ${network.chainId})`;
+                this.elements.accountAddress.innerText = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+            },
+
+            showMessage(text, type = 'info', duration = 4000) {
+                this.elements.messageText.innerText = text;
+                const box = this.elements.messageBox;
+                box.className = 'fixed bottom-5 right-5 max-w-sm p-4 rounded-lg shadow-lg text-white'; // Reset classes
+                if (type === 'success') box.classList.add('bg-green-500');
+                else if (type === 'error') box.classList.add('bg-red-500');
+                else box.classList.add('bg-slate-700');
+                box.classList.remove('hidden');
+                setTimeout(() => box.classList.add('hidden'), duration);
+            }
+        };
+
+        window.addEventListener('load', () => {
+            App.init();
+        });
+    </script>
+
+</body>
+</html>
