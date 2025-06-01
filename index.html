@@ -9,11 +9,21 @@
     <script src="ethers.min.js" type="application/javascript"></script>
     <script>
         // Inline check for Ethers.js loading
-        if (typeof ethers !== 'undefined') {
-            console.log('[Inline Check] Ethers.js object IS defined immediately after script tag.');
-        } else {
-            console.error('[Inline Check] Ethers.js object IS NOT defined immediately after script tag. Verify ethers.min.js is in the root of your deployment and that the path in the script tag is correct. Check the Network tab in browser dev tools for a 404 error for ethers.min.js.');
-        }
+        // This script runs immediately after the browser attempts to load ethers.min.js
+        // It cannot use App.showMessage because App might not be initialized if ethers fails.
+        document.addEventListener('DOMContentLoaded', function() {
+            const ethersLoadErrorDiv = document.getElementById('ethers-load-error');
+            if (typeof ethers !== 'undefined') {
+                console.log('[Inline Check] Ethers.js object IS defined immediately after script tag.');
+                if(ethersLoadErrorDiv) ethersLoadErrorDiv.style.display = 'none';
+            } else {
+                console.error('[Inline Check] Ethers.js object IS NOT defined. Verify ethers.min.js is in the root of your deployment and the path in the script tag is correct. Check Network tab for 404 on ethers.min.js.');
+                if(ethersLoadErrorDiv) {
+                    ethersLoadErrorDiv.innerHTML = '<strong>Critical Error:</strong> Ethers.js library failed to load. The dApp cannot function. Please ensure <code>ethers.min.js</code> is in the root of the deployed site and accessible. Check the browser console (F12) and Network tab for more details (e.g., a 404 error for ethers.min.js).';
+                    ethersLoadErrorDiv.style.display = 'block';
+                }
+            }
+        });
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,16 +45,29 @@
         .btn-tertiary { background-color: #7c3aed; color: white; }
         .btn-tertiary:hover { background-color: #6d28d9; }
         .btn-disabled { background-color: #9ca3af; cursor: not-allowed; }
+        #ethers-load-error {
+            background-color: #ef4444; /* red-500 */
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: bold;
+            display: none; /* Initially hidden */
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body class="antialiased">
 
+    <div id="ethers-load-error"></div> 
+
     <div id="app" class="min-h-screen container mx-auto p-4 md:p-8">
         
-        <header class="text-center mb-10">
+        <header class="text-center mb-10 pt-16"> {/* Added padding-top if error message is shown */}
             <img id="logo-header" src="https://storage.googleapis.com/gemini-generative-ai-hackathon/srev%20token%20logo.jpg" alt="SREV Character Logo" class="h-24 w-auto mx-auto mb-4"/>
             <h1 class="text-4xl md:text-5xl font-bold text-slate-800">Service Coin Staking</h1>
-            <p class="text-slate-600 mt-2">Stake SRV, Receive SREV, and claim real revenue rewards in USDC.</p>
+            <p class="text-slate-600 mt-2">Stake SRV, earn SREV, and claim real revenue rewards in USDC.</p>
         </header>
 
         <div id="wallet-section" class="max-w-2xl mx-auto mb-10">
@@ -124,27 +147,28 @@
                 stakingVault: '0x691e29E98ECDc5ae948355F30102cD4D637eddB7',
                 rewardDistributor: '0x71f618EFb0422687e5B2ad9cD973aDACb645D9DE',
             },
-            // !!! USING FULL ABI FOR rewardDistributor NOW !!!
-            // You should also replace stakingVault and erc20 ABIs with your full, actual ABIs if they differ.
             abis: {
-                erc20: ["function name() view returns (string)","function symbol() view returns (string)","function decimals() view returns (uint8)","function balanceOf(address account) view returns (uint256)","function allowance(address owner, address spender) view returns (uint256)","function approve(address spender, uint256 amount) returns (bool)"],
-                stakingVault: ["function stake(uint256 amount) external","function unstake(uint256 amount) external"], // Replace with your full StakingVault ABI
+                srv: [{"inputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"string","name":"logo","type":"string"},{"internalType":"uint8","name":"decimals","type":"uint8"},{"internalType":"uint256","name":"initialSupply","type":"uint256"},{"internalType":"uint256","name":"maxSupply","type":"uint256"},{"internalType":"address","name":"treasury","type":"address"},{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"referrer","type":"address"},{"internalType":"address","name":"tokenStore","type":"address"},{"components":[{"components":[{"internalType":"uint256","name":"percentage","type":"uint256"},{"internalType":"bool","name":"onlyOnSwaps","type":"bool"}],"internalType":"struct ITokenLauncherERC20.FeeDetails","name":"transferFee","type":"tuple"},{"components":[{"internalType":"uint256","name":"percentage","type":"uint256"},{"internalType":"bool","name":"onlyOnSwaps","type":"bool"}],"internalType":"struct ITokenLauncherERC20.FeeDetails","name":"burn","type":"tuple"},{"components":[{"internalType":"uint256","name":"percentage","type":"uint256"},{"internalType":"bool","name":"onlyOnSwaps","type":"bool"}],"internalType":"struct ITokenLauncherERC20.FeeDetails","name":"reflection","type":"tuple"},{"components":[{"internalType":"uint256","name":"percentage","type":"uint256"},{"internalType":"bool","name":"onlyOnSwaps","type":"bool"}],"internalType":"struct ITokenLauncherERC20.FeeDetails","name":"buyback","type":"tuple"}],"internalType":"struct ITokenLauncherERC20.Fees","name":"fees","type":"tuple"},{"internalType":"address","name":"buybackHandler","type":"address"},{"internalType":"enum ITokenLauncherCommon.PaymentMethod","name":"paymentMethod","type":"uint8"}],"internalType":"struct ITokenLauncherERC20.CreateErc20Input","name":"_input","type":"tuple"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"router","type":"address"},{"indexed":true,"internalType":"address","name":"pairToken","type":"address"},{"indexed":false,"internalType":"uint256","name":"liquidityBasisPoints","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"priceImpactBasisPoints","type":"uint256"}],"name":"BuyBackDetailsUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"pool","type":"address"}],"name":"ExchangePoolAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"pool","type":"address"}],"name":"ExchangePoolRemoved","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"}],"name":"ExemptedAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"}],"name":"ExemptedRemoved","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"role","type":"bytes32"},{"indexed":true,"internalType":"bytes32","name":"previousAdminRole","type":"bytes32"},{"indexed":true,"internalType":"bytes32","name":"newAdminRole","type":"bytes32"}],"name":"RoleAdminChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"role","type":"bytes32"},{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":true,"internalType":"address","name":"sender","type":"address"}],"name":"RoleGranted","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"role","type":"bytes32"},{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":true,"internalType":"address","name":"sender","type":"address"}],"name":"RoleRevoked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"newTokenLauncher","type":"address"}],"name":"TokenLauncherUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":true,"internalType":"address","name":"receiver","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":true,"internalType":"string","name":"taxType","type":"string"}],"name":"TransferTax","type":"event"},{"inputs":[],"name":"BURN_ADDRESS","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"DEFAULT_ADMIN_ROLE","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"FEE_MANAGER_ROLE","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MAX","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MULTIPLIER_BASIS","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"pool","type":"address"}],"name":"addExchangePool","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"addExemptAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"buybackDetails","outputs":[{"internalType":"address","name":"pairToken","type":"address"},{"internalType":"address","name":"router","type":"address"},{"internalType":"uint256","name":"liquidityBasisPoints","type":"uint256"},{"internalType":"uint256","name":"priceImpactBasisPoints","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"buybackHandler","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"excludeAccount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"fees","outputs":[{"components":[{"internalType":"uint256","name":"percentage","type":"uint256"},{"internalType":"bool","name":"onlyOnSwaps","type":"bool"}],"internalType":"struct ITokenLauncherERC20.FeeDetails","name":"transferFee","type":"tuple"},{"components":[{"internalType":"uint256","name":"percentage","type":"uint256"},{"internalType":"bool","name":"onlyOnSwaps","type":"bool"}],"internalType":"struct ITokenLauncherERC20.FeeDetails","name":"burn","type":"tuple"},{"components":[{"internalType":"uint256","name":"percentage","type":"uint256"},{"internalType":"bool","name":"onlyOnSwaps","type":"bool"}],"internalType":"struct ITokenLauncherERC20.FeeDetails","name":"reflection","type":"tuple"},{"components":[{"internalType":"uint256","name":"percentage","type":"uint256"},{"internalType":"bool","name":"onlyOnSwaps","type":"bool"}],"internalType":"struct ITokenLauncherERC20.FeeDetails","name":"buyback","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"}],"name":"getRoleAdmin","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"},{"internalType":"address","name":"account","type":"address"}],"name":"grantRole","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"},{"internalType":"address","name":"account","type":"address"}],"name":"hasRole","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"includeAccount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"pool","type":"address"}],"name":"isExchangePool","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"isExcludedFromReflectionRewards","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"isExemptedFromTax","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"isReflectionToken","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"logo","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"maxSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"mint","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tAmount","type":"uint256"}],"name":"reflect","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"tAmount","type":"uint256"},{"internalType":"bool","name":"deductTransferFee","type":"bool"}],"name":"reflectionFromToken","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"pool","type":"address"}],"name":"removeExchangePool","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"removeExemptAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"},{"internalType":"address","name":"account","type":"address"}],"name":"renounceRole","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"},{"internalType":"address","name":"account","type":"address"}],"name":"revokeRole","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"internalType":"address","name":"pairToken","type":"address"},{"internalType":"address","name":"router","type":"address"},{"internalType":"uint256","name":"liquidityBasisPoints","type":"uint256"},{"internalType":"uint256","name":"priceImpactBasisPoints","type":"uint256"}],"internalType":"struct ITokenLauncherLiquidityPoolFactory.BuyBackDetails","name":"_buybackDetails","type":"tuple"}],"name":"setBuybackDetails","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes4","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"rAmount","type":"uint256"}],"name":"tokenFromReflection","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"tokenLauncher","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalFees","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalReflection","outputs":[{"internalType":"uint256","name":"t","type":"uint256"},{"internalType":"uint256","name":"r","type":"uint256"},{"internalType":"uint256","name":"tFee","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"treasury","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"components":[{"components":[{"internalType":"uint256","name":"percentage","type":"uint256"},{"internalType":"bool","name":"onlyOnSwaps","type":"bool"}],"internalType":"struct ITokenLauncherERC20.FeeDetails","name":"transferFee","type":"tuple"},{"components":[{"internalType":"uint256","name":"percentage","type":"uint256"},{"internalType":"bool","name":"onlyOnSwaps","type":"bool"}],"internalType":"struct ITokenLauncherERC20.FeeDetails","name":"burn","type":"tuple"},{"components":[{"internalType":"uint256","name":"percentage","type":"uint256"},{"internalType":"bool","name":"onlyOnSwaps","type":"bool"}],"internalType":"struct ITokenLauncherERC20.FeeDetails","name":"reflection","type":"tuple"},{"components":[{"internalType":"uint256","name":"percentage","type":"uint256"},{"internalType":"bool","name":"onlyOnSwaps","type":"bool"}],"internalType":"struct ITokenLauncherERC20.FeeDetails","name":"buyback","type":"tuple"}],"internalType":"struct ITokenLauncherERC20.Fees","name":"_fees","type":"tuple"}],"name":"updateFees","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newTokenLauncher","type":"address"}],"name":"updateTokenLauncher","outputs":[],"stateMutability":"nonpayable","type":"function"}],
+                srev: [{"inputs":[{"internalType":"address","name":"_stakingVault","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"burn","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"mint","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"stakingVault","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}],
+                stakingVault: [{"inputs":[{"internalType":"address","name":"_srv","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"SREV","outputs":[{"internalType":"contract SREVToken","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"SRV","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getSREV","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"stake","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"staked","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"unstake","outputs":[],"stateMutability":"nonpayable","type":"function"}],
                 rewardDistributor: [{"inputs":[{"internalType":"address","name":"_rewardToken","type":"address"},{"internalType":"address","name":"_srevToken","type":"address"},{"internalType":"address","name":"_daoOperator","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newAPR","type":"uint256"}],"name":"APRUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newInterval","type":"uint256"}],"name":"ClaimIntervalUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Claimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"EmergencyWithdrawal","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bool","name":"status","type":"bool"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardFunded","type":"event"},{"inputs":[],"name":"BPS_DIVISOR","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"SECONDS_IN_YEAR","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"users","type":"address[]"}],"name":"accrueAll","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"baseAPR","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"claim","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"claimInterval","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"daoOperator","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"}],"name":"emergencyWithdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"fund","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"lastClaimTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"lastClaimed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"paused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"pendingRewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"rewardToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"newAPR","type":"uint256"}],"name":"setBaseAPR","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"newInterval","type":"uint256"}],"name":"setClaimInterval","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bool","name":"_paused","type":"bool"}],"name":"setPaused","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"srevToken","outputs":[{"internalType":"contract ISREVToken","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"viewClaimCooldown","outputs":[{"internalType":"uint256","name":"secondsUntilClaimable","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"viewPending","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"viewRewardPoolBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]
             },
             init() {
                 console.log("App.init() called");
-                this.elements = { /* ... elements ... */ 
+                this.elements = { 
                     connectButton: document.getElementById('connect-button'), walletInfo: document.getElementById('wallet-info'), networkName: document.getElementById('network-name'), accountAddress: document.getElementById('account-address'), mainContent: document.getElementById('main-content'), srvBalance: document.getElementById('srv-balance'), srevBalance: document.getElementById('srev-balance'), usdcRewards: document.getElementById('usdc-rewards'), stakeAmountInput: document.getElementById('stake-amount'), approveButton: document.getElementById('approve-button'), stakeButton: document.getElementById('stake-button'), unstakeAmountInput: document.getElementById('unstake-amount'), unstakeButton: document.getElementById('unstake-button'), claimButton: document.getElementById('claim-button'), messageBox: document.getElementById('message-box'), messageText: document.getElementById('message-text'),
                 };
                 this.addEventListeners();
                 if (typeof ethers === 'undefined') {
+                    // This message is now potentially redundant if the inline check already logged an error,
+                    // but it's good to keep as a fallback.
                     this.showMessage('CRITICAL: Ethers.js library could not be loaded. Ensure ethers.min.js is present.', 'error', 10000);
                     console.error("App.init: Ethers.js is not defined! Ensure ethers.min.js is in the same folder as index.html and linked correctly.");
                 } else {
                     console.log("App.init: Ethers.js loaded successfully.");
                 }
             },
-            addEventListeners() { /* ... same as before ... */ 
+            addEventListeners() { 
                 this.elements.connectButton.addEventListener('click', () => this.connectWallet());
                 this.elements.approveButton.addEventListener('click', () => this.approve());
                 this.elements.stakeButton.addEventListener('click', () => this.stake());
@@ -152,7 +176,7 @@
                 this.elements.claimButton.addEventListener('click', () => this.claim());
                 this.elements.stakeAmountInput.addEventListener('input', () => this.checkAllowance());
             },
-            async connectWallet() { /* ... same as before ... */ 
+            async connectWallet() { 
                 console.log("connectWallet called");
                 if (typeof window.ethereum === 'undefined') { return this.showMessage('MetaMask is not installed.', 'error'); }
                 if (typeof ethers === 'undefined') { console.error("Ethers.js is still not defined in connectWallet!"); return this.showMessage('Ethers.js is still not defined.', 'error', 10000); }
@@ -169,10 +193,10 @@
                     this.showMessage('Wallet connected successfully!', 'success');
                 } catch (error) { console.error("Connection failed:", error); this.showMessage(error.message || 'User rejected connection.', 'error'); }
             },
-            initContracts() { /* ... same as before, but now uses full rewardDistributor ABI ... */ 
-                console.log("Initializing contracts with updated rewardDistributor ABI...");
-                this.contracts.srv = new ethers.Contract(this.addresses.srv, this.abis.erc20, this.signer);
-                this.contracts.srev = new ethers.Contract(this.addresses.srev, this.abis.erc20, this.signer);
+            initContracts() { 
+                console.log("Initializing contracts with specific SRV, SREV & StakingVault ABIs...");
+                this.contracts.srv = new ethers.Contract(this.addresses.srv, this.abis.srv, this.signer);
+                this.contracts.srev = new ethers.Contract(this.addresses.srev, this.abis.srev, this.signer);
                 this.contracts.stakingVault = new ethers.Contract(this.addresses.stakingVault, this.abis.stakingVault, this.signer);
                 this.contracts.rewardDistributor = new ethers.Contract(this.addresses.rewardDistributor, this.abis.rewardDistributor, this.signer);
                 console.log("Contracts initialized:", this.contracts);
@@ -184,17 +208,19 @@
                     console.log("Fetching SRV balance...");
                     const srvBal = await this.contracts.srv.balanceOf(this.account);
                     console.log("Raw SRV Balance:", srvBal.toString());
-                    this.elements.srvBalance.innerText = parseFloat(ethers.utils.formatUnits(srvBal, 18)).toFixed(4);
+                    const srvDecimals = await this.contracts.srv.decimals(); 
+                    this.elements.srvBalance.innerText = parseFloat(ethers.utils.formatUnits(srvBal, srvDecimals)).toFixed(4);
 
                     console.log("Fetching SREV balance...");
                     const srevBal = await this.contracts.srev.balanceOf(this.account);
                     console.log("Raw SREV Balance:", srevBal.toString());
-                    this.elements.srevBalance.innerText = parseFloat(ethers.utils.formatUnits(srevBal, 18)).toFixed(4);
+                    const srevDecimals = await this.contracts.srev.decimals();
+                    this.elements.srevBalance.innerText = parseFloat(ethers.utils.formatUnits(srevBal, srevDecimals)).toFixed(4);
                     
-                    console.log("Fetching earned rewards using viewPending..."); // UPDATED FUNCTION NAME
-                    const rewards = await this.contracts.rewardDistributor.viewPending(this.account); // UPDATED FUNCTION CALL
+                    console.log("Fetching earned rewards using viewPending...");
+                    const rewards = await this.contracts.rewardDistributor.viewPending(this.account); 
                     console.log("Raw Earned Rewards (from viewPending):", rewards.toString());
-                    this.elements.usdcRewards.innerText = parseFloat(ethers.utils.formatUnits(rewards, 6)).toFixed(4); // Assuming rewards are in USDC (6 decimals)
+                    this.elements.usdcRewards.innerText = parseFloat(ethers.utils.formatUnits(rewards, 18)).toFixed(4); 
 
                     await this.checkAllowance(); 
                     console.log("Data fetch and UI update complete.");
@@ -206,58 +232,62 @@
                     this.elements.usdcRewards.innerText = "Error";
                 }
             },
-            async checkAllowance() { /* ... same as before ... */ 
+            async checkAllowance() { 
                 if (!this.account || !this.elements.stakeAmountInput.value) { this.elements.stakeButton.disabled = true; this.elements.stakeButton.classList.add('btn-disabled'); return; }
                 if (typeof ethers === 'undefined') { console.error("checkAllowance: Ethers not defined"); return; }
                 try {
-                    const stakeAmountBN = ethers.utils.parseUnits(this.elements.stakeAmountInput.value || '0', 18);
+                    const srvDecimals = this.contracts.srv ? await this.contracts.srv.decimals() : 18;
+                    const stakeAmountBN = ethers.utils.parseUnits(this.elements.stakeAmountInput.value || '0', srvDecimals);
                     const allowance = await this.contracts.srv.allowance(this.account, this.addresses.stakingVault);
                     if (allowance.gte(stakeAmountBN)) { this.elements.stakeButton.disabled = false; this.elements.stakeButton.classList.remove('btn-disabled'); } 
                     else { this.elements.stakeButton.disabled = true; this.elements.stakeButton.classList.add('btn-disabled'); }
                 } catch (e) { console.error("Error parsing stake amount for allowance check:", e); this.elements.stakeButton.disabled = true; this.elements.stakeButton.classList.add('btn-disabled'); }
             },
-            async approve() { /* ... same as before ... */ 
+            async approve() { 
                 const amountStr = this.elements.stakeAmountInput.value;
                 if (!amountStr || parseFloat(amountStr) <= 0) { return this.showMessage('Please enter a valid amount to approve.', 'error'); }
                 if (typeof ethers === 'undefined') return this.showMessage('Ethers.js not loaded.', 'error');
                 this.showMessage('Requesting approval from your wallet...', 'info');
                 try {
-                    const amountToApprove = ethers.utils.parseUnits(amountStr, 18);
+                    const srvDecimals = await this.contracts.srv.decimals();
+                    const amountToApprove = ethers.utils.parseUnits(amountStr, srvDecimals);
                     const tx = await this.contracts.srv.approve(this.addresses.stakingVault, amountToApprove);
                     console.log("Approval transaction sent:", tx.hash); await tx.wait(); console.log("Approval transaction confirmed.");
                     this.showMessage('Approval successful!', 'success'); await this.checkAllowance();
                 } catch (error) { console.error("Approval error:", error); this.showMessage(error.message || 'Approval failed. Check console.', 'error'); }
             },
-            async stake() { /* ... same as before ... */
+            async stake() {
                 const amountStr = this.elements.stakeAmountInput.value;
                 if (!amountStr || parseFloat(amountStr) <= 0) { return this.showMessage('Please enter a valid amount to stake.', 'error'); }
                 if (typeof ethers === 'undefined') return this.showMessage('Ethers.js not loaded.', 'error');
                 this.showMessage('Processing your stake transaction...', 'info');
                 try {
-                    const amountToStake = ethers.utils.parseUnits(amountStr, 18);
+                    const srvDecimals = await this.contracts.srv.decimals();
+                    const amountToStake = ethers.utils.parseUnits(amountStr, srvDecimals);
                     const tx = await this.contracts.stakingVault.stake(amountToStake);
                     console.log("Stake transaction sent:", tx.hash); await tx.wait(); console.log("Stake transaction confirmed.");
                     this.showMessage('Staking successful!', 'success'); this.elements.stakeAmountInput.value = ''; await this.fetchAllData();
                 } catch (error) { console.error("Staking error:", error); this.showMessage(error.message || 'Staking failed. Check console.', 'error'); }
             },
-            async unstake() { /* ... same as before ... */
+            async unstake() {
                 const amountStr = this.elements.unstakeAmountInput.value;
                 if (!amountStr || parseFloat(amountStr) <= 0) { return this.showMessage('Please enter a valid amount to unstake.', 'error'); }
                 if (typeof ethers === 'undefined') return this.showMessage('Ethers.js not loaded.', 'error');
                 this.showMessage('Processing your unstake transaction...', 'info');
                 try {
-                    const amountToUnstake = ethers.utils.parseUnits(amountStr, 18);
+                    const srevDecimals = this.contracts.srev ? await this.contracts.srev.decimals() : 18;
+                    const amountToUnstake = ethers.utils.parseUnits(amountStr, srevDecimals);
                     const tx = await this.contracts.stakingVault.unstake(amountToUnstake);
                     console.log("Unstake transaction sent:", tx.hash); await tx.wait(); console.log("Unstake transaction confirmed.");
                     this.showMessage('Unstaking successful!', 'success'); this.elements.unstakeAmountInput.value = ''; await this.fetchAllData();
                 } catch (error) { console.error("Unstaking error:", error); this.showMessage(error.message || 'Unstaking failed. Check console.', 'error'); }
             },
             async claim() {
-                console.log("Claim function called, using contract.claim()"); // UPDATED FUNCTION NAME
+                console.log("Claim function called, using contract.claim()"); 
                 if (typeof ethers === 'undefined') return this.showMessage('Ethers.js not loaded.', 'error');
                 this.showMessage('Processing your claim transaction...', 'info');
                 try {
-                    const tx = await this.contracts.rewardDistributor.claim(); // UPDATED FUNCTION CALL
+                    const tx = await this.contracts.rewardDistributor.claim(); 
                     console.log("Claim transaction sent:", tx.hash);
                     await tx.wait();
                     console.log("Claim transaction confirmed.");
@@ -268,11 +298,11 @@
                     this.showMessage(error.message || 'Claim failed. Check console.', 'error');
                 }
             },
-            updateUIForConnection(address, network) { /* ... same as before ... */ 
+            updateUIForConnection(address, network) { 
                 this.elements.connectButton.classList.add('hidden'); this.elements.walletInfo.classList.remove('hidden'); this.elements.mainContent.classList.remove('hidden');
                 this.elements.networkName.innerText = `${network.name} (ID: ${network.chainId})`; this.elements.accountAddress.innerText = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
             },
-            showMessage(text, type = 'info', duration = 4000) { /* ... same as before ... */ 
+            showMessage(text, type = 'info', duration = 4000) { 
                 this.elements.messageText.innerText = text; const box = this.elements.messageBox;
                 box.className = 'fixed bottom-5 right-5 max-w-sm p-4 rounded-lg shadow-lg text-white'; 
                 if (type === 'success') box.classList.add('bg-green-500'); else if (type === 'error') box.classList.add('bg-red-500'); else box.classList.add('bg-slate-700');
