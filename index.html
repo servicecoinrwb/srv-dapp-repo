@@ -1,4 +1,4 @@
-c:\Users\brian\OneDrive\Pictures\srev token logo.png <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,44 +7,34 @@ c:\Users\brian\OneDrive\Pictures\srev token logo.png <!DOCTYPE html>
     <link rel="icon" href="srev-favicon.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="ethers.min.js" type="application/javascript"></script>
+    <script>
+        // Inline check for Ethers.js loading
+        if (typeof ethers !== 'undefined') {
+            console.log('[Inline Check] Ethers.js object IS defined immediately after script tag.');
+        } else {
+            console.error('[Inline Check] Ethers.js object IS NOT defined immediately after script tag. Verify ethers.min.js is in the root of your deployment and that the path in the script tag is correct. Check the Network tab in browser dev tools for a 404 error for ethers.min.js.');
+        }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f4f1eb; /* Warm Neutral Background */
+            background-color: #f4f1eb; 
         }
         .glass-card {
             background-color: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        .btn-primary {
-            background-color: #0891b2; /* Cyan */
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #0e7490;
-        }
-        .btn-secondary {
-            background-color: #d97706; /* Amber */
-            color: white;
-        }
-        .btn-secondary:hover {
-            background-color: #b45309;
-        }
-        .btn-tertiary {
-            background-color: #7c3aed; /* Purple */
-            color: white;
-        }
-         .btn-tertiary:hover {
-            background-color: #6d28d9;
-        }
-        .btn-disabled {
-            background-color: #9ca3af;
-            cursor: not-allowed;
-        }
+        .btn-primary { background-color: #0891b2; color: white; }
+        .btn-primary:hover { background-color: #0e7490; }
+        .btn-secondary { background-color: #d97706; color: white; }
+        .btn-secondary:hover { background-color: #b45309; }
+        .btn-tertiary { background-color: #7c3aed; color: white; }
+        .btn-tertiary:hover { background-color: #6d28d9; }
+        .btn-disabled { background-color: #9ca3af; cursor: not-allowed; }
     </style>
 </head>
 <body class="antialiased">
@@ -124,67 +114,37 @@ c:\Users\brian\OneDrive\Pictures\srev token logo.png <!DOCTYPE html>
 
     <script>
         const App = {
-            // --- State ---
             provider: null,
             signer: null,
             account: null,
-            contracts: {
-                srv: null,
-                srev: null,
-                stakingVault: null,
-                rewardDistributor: null,
-            },
-            
-            // --- Configuration ---
+            contracts: { srv: null, srev: null, stakingVault: null, rewardDistributor: null },
             addresses: {
                 srv: '0x057ba66c2109Fd4487F0781E0203B71fd77a6341',
                 srev: '0x2F745Da2FA453ee76c756fADcc081f59284B2a40',
                 stakingVault: '0x691e29E98ECDc5ae948355F30102cD4D637eddB7',
                 rewardDistributor: '0x71f618EFb0422687e5B2ad9cD973aDACb645D9DE',
             },
+            // !!! USING FULL ABI FOR rewardDistributor NOW !!!
+            // You should also replace stakingVault and erc20 ABIs with your full, actual ABIs if they differ.
             abis: {
-                erc20: [
-                    "function name() view returns (string)",
-                    "function symbol() view returns (string)",
-                    "function decimals() view returns (uint8)",
-                    "function balanceOf(address account) view returns (uint256)",
-                    "function allowance(address owner, address spender) view returns (uint256)",
-                    "function approve(address spender, uint256 amount) returns (bool)",
-                ],
-                stakingVault: [
-                    "function stake(uint256 amount) external",
-                    "function unstake(uint256 amount) external",
-                ],
-                rewardDistributor: [
-                    "function earned(address account) view returns (uint256)",
-                    "function claimReward() external",
-                ],
+                erc20: ["function name() view returns (string)","function symbol() view returns (string)","function decimals() view returns (uint8)","function balanceOf(address account) view returns (uint256)","function allowance(address owner, address spender) view returns (uint256)","function approve(address spender, uint256 amount) returns (bool)"],
+                stakingVault: ["function stake(uint256 amount) external","function unstake(uint256 amount) external"], // Replace with your full StakingVault ABI
+                rewardDistributor: [{"inputs":[{"internalType":"address","name":"_rewardToken","type":"address"},{"internalType":"address","name":"_srevToken","type":"address"},{"internalType":"address","name":"_daoOperator","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newAPR","type":"uint256"}],"name":"APRUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newInterval","type":"uint256"}],"name":"ClaimIntervalUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Claimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"EmergencyWithdrawal","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bool","name":"status","type":"bool"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardFunded","type":"event"},{"inputs":[],"name":"BPS_DIVISOR","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"SECONDS_IN_YEAR","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"users","type":"address[]"}],"name":"accrueAll","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"baseAPR","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"claim","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"claimInterval","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"daoOperator","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"}],"name":"emergencyWithdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"fund","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"lastClaimTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"lastClaimed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"paused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"pendingRewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"rewardToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"newAPR","type":"uint256"}],"name":"setBaseAPR","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"newInterval","type":"uint256"}],"name":"setClaimInterval","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bool","name":"_paused","type":"bool"}],"name":"setPaused","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"srevToken","outputs":[{"internalType":"contract ISREVToken","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"viewClaimCooldown","outputs":[{"internalType":"uint256","name":"secondsUntilClaimable","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"viewPending","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"viewRewardPoolBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]
             },
-
-            // --- Initialization ---
             init() {
-                this.elements = {
-                    connectButton: document.getElementById('connect-button'),
-                    walletInfo: document.getElementById('wallet-info'),
-                    networkName: document.getElementById('network-name'),
-                    accountAddress: document.getElementById('account-address'),
-                    mainContent: document.getElementById('main-content'),
-                    srvBalance: document.getElementById('srv-balance'),
-                    srevBalance: document.getElementById('srev-balance'),
-                    usdcRewards: document.getElementById('usdc-rewards'),
-                    stakeAmountInput: document.getElementById('stake-amount'),
-                    approveButton: document.getElementById('approve-button'),
-                    stakeButton: document.getElementById('stake-button'),
-                    unstakeAmountInput: document.getElementById('unstake-amount'),
-                    unstakeButton: document.getElementById('unstake-button'),
-                    claimButton: document.getElementById('claim-button'),
-                    messageBox: document.getElementById('message-box'),
-                    messageText: document.getElementById('message-text'),
+                console.log("App.init() called");
+                this.elements = { /* ... elements ... */ 
+                    connectButton: document.getElementById('connect-button'), walletInfo: document.getElementById('wallet-info'), networkName: document.getElementById('network-name'), accountAddress: document.getElementById('account-address'), mainContent: document.getElementById('main-content'), srvBalance: document.getElementById('srv-balance'), srevBalance: document.getElementById('srev-balance'), usdcRewards: document.getElementById('usdc-rewards'), stakeAmountInput: document.getElementById('stake-amount'), approveButton: document.getElementById('approve-button'), stakeButton: document.getElementById('stake-button'), unstakeAmountInput: document.getElementById('unstake-amount'), unstakeButton: document.getElementById('unstake-button'), claimButton: document.getElementById('claim-button'), messageBox: document.getElementById('message-box'), messageText: document.getElementById('message-text'),
                 };
                 this.addEventListeners();
+                if (typeof ethers === 'undefined') {
+                    this.showMessage('CRITICAL: Ethers.js library could not be loaded. Ensure ethers.min.js is present.', 'error', 10000);
+                    console.error("App.init: Ethers.js is not defined! Ensure ethers.min.js is in the same folder as index.html and linked correctly.");
+                } else {
+                    console.log("App.init: Ethers.js loaded successfully.");
+                }
             },
-
-            addEventListeners() {
+            addEventListeners() { /* ... same as before ... */ 
                 this.elements.connectButton.addEventListener('click', () => this.connectWallet());
                 this.elements.approveButton.addEventListener('click', () => this.approve());
                 this.elements.stakeButton.addEventListener('click', () => this.stake());
@@ -192,169 +152,134 @@ c:\Users\brian\OneDrive\Pictures\srev token logo.png <!DOCTYPE html>
                 this.elements.claimButton.addEventListener('click', () => this.claim());
                 this.elements.stakeAmountInput.addEventListener('input', () => this.checkAllowance());
             },
-
-            // --- Wallet & Contract Logic ---
-            async connectWallet() {
-                if (typeof window.ethereum === 'undefined') {
-                    return this.showMessage('MetaMask is not installed. Please install it to use this dApp.', 'error');
-                }
+            async connectWallet() { /* ... same as before ... */ 
+                console.log("connectWallet called");
+                if (typeof window.ethereum === 'undefined') { return this.showMessage('MetaMask is not installed.', 'error'); }
+                if (typeof ethers === 'undefined') { console.error("Ethers.js is still not defined in connectWallet!"); return this.showMessage('Ethers.js is still not defined.', 'error', 10000); }
                 try {
                     this.provider = new ethers.providers.Web3Provider(window.ethereum);
                     await this.provider.send("eth_requestAccounts", []);
                     this.signer = this.provider.getSigner();
                     this.account = await this.signer.getAddress();
                     const network = await this.provider.getNetwork();
-
+                    console.log("Wallet connected:", this.account, "Network:", network);
                     this.initContracts();
                     this.updateUIForConnection(this.account, network);
-                    this.fetchAllData();
+                    await this.fetchAllData(); 
                     this.showMessage('Wallet connected successfully!', 'success');
-                } catch (error) {
-                    console.error("Connection failed:", error);
-                    this.showMessage(error.message || 'User rejected the connection request.', 'error');
-                }
+                } catch (error) { console.error("Connection failed:", error); this.showMessage(error.message || 'User rejected connection.', 'error'); }
             },
-
-            initContracts() {
+            initContracts() { /* ... same as before, but now uses full rewardDistributor ABI ... */ 
+                console.log("Initializing contracts with updated rewardDistributor ABI...");
                 this.contracts.srv = new ethers.Contract(this.addresses.srv, this.abis.erc20, this.signer);
                 this.contracts.srev = new ethers.Contract(this.addresses.srev, this.abis.erc20, this.signer);
                 this.contracts.stakingVault = new ethers.Contract(this.addresses.stakingVault, this.abis.stakingVault, this.signer);
                 this.contracts.rewardDistributor = new ethers.Contract(this.addresses.rewardDistributor, this.abis.rewardDistributor, this.signer);
+                console.log("Contracts initialized:", this.contracts);
             },
-            
             async fetchAllData() {
-                if (!this.account) return;
+                console.log("fetchAllData called for account:", this.account);
+                if (!this.account || !this.contracts.srv) { console.warn("fetchAllData: Account or contracts not ready."); return; }
                 try {
-                    const [srvBal, srevBal, rewards] = await Promise.all([
-                        this.contracts.srv.balanceOf(this.account),
-                        this.contracts.srev.balanceOf(this.account),
-                        this.contracts.rewardDistributor.earned(this.account)
-                    ]);
-                    
+                    console.log("Fetching SRV balance...");
+                    const srvBal = await this.contracts.srv.balanceOf(this.account);
+                    console.log("Raw SRV Balance:", srvBal.toString());
                     this.elements.srvBalance.innerText = parseFloat(ethers.utils.formatUnits(srvBal, 18)).toFixed(4);
+
+                    console.log("Fetching SREV balance...");
+                    const srevBal = await this.contracts.srev.balanceOf(this.account);
+                    console.log("Raw SREV Balance:", srevBal.toString());
                     this.elements.srevBalance.innerText = parseFloat(ethers.utils.formatUnits(srevBal, 18)).toFixed(4);
-                    this.elements.usdcRewards.innerText = parseFloat(ethers.utils.formatUnits(rewards, 6)).toFixed(4); // USDC typically has 6 decimals
+                    
+                    console.log("Fetching earned rewards using viewPending..."); // UPDATED FUNCTION NAME
+                    const rewards = await this.contracts.rewardDistributor.viewPending(this.account); // UPDATED FUNCTION CALL
+                    console.log("Raw Earned Rewards (from viewPending):", rewards.toString());
+                    this.elements.usdcRewards.innerText = parseFloat(ethers.utils.formatUnits(rewards, 6)).toFixed(4); // Assuming rewards are in USDC (6 decimals)
 
-                    this.checkAllowance();
+                    await this.checkAllowance(); 
+                    console.log("Data fetch and UI update complete.");
                 } catch (error) {
-                    console.error("Error fetching data:", error);
-                    this.showMessage('Could not fetch account data. Make sure you are on the correct network.', 'error');
+                    console.error("Error in fetchAllData:", error);
+                    this.showMessage('Could not fetch all account data. Check console.', 'error');
+                    this.elements.srvBalance.innerText = "Error";
+                    this.elements.srevBalance.innerText = "Error";
+                    this.elements.usdcRewards.innerText = "Error";
                 }
             },
-            
-            async checkAllowance() {
-                if (!this.account || !this.elements.stakeAmountInput.value) {
-                    this.elements.stakeButton.disabled = true;
-                    this.elements.stakeButton.classList.add('btn-disabled');
-                    return;
-                }
-                const stakeAmount = ethers.utils.parseUnits(this.elements.stakeAmountInput.value || '0', 18);
-                const allowance = await this.contracts.srv.allowance(this.account, this.addresses.stakingVault);
-                
-                if (allowance.gte(stakeAmount)) {
-                    this.elements.stakeButton.disabled = false;
-                    this.elements.stakeButton.classList.remove('btn-disabled');
-                } else {
-                    this.elements.stakeButton.disabled = true;
-                    this.elements.stakeButton.classList.add('btn-disabled');
-                }
+            async checkAllowance() { /* ... same as before ... */ 
+                if (!this.account || !this.elements.stakeAmountInput.value) { this.elements.stakeButton.disabled = true; this.elements.stakeButton.classList.add('btn-disabled'); return; }
+                if (typeof ethers === 'undefined') { console.error("checkAllowance: Ethers not defined"); return; }
+                try {
+                    const stakeAmountBN = ethers.utils.parseUnits(this.elements.stakeAmountInput.value || '0', 18);
+                    const allowance = await this.contracts.srv.allowance(this.account, this.addresses.stakingVault);
+                    if (allowance.gte(stakeAmountBN)) { this.elements.stakeButton.disabled = false; this.elements.stakeButton.classList.remove('btn-disabled'); } 
+                    else { this.elements.stakeButton.disabled = true; this.elements.stakeButton.classList.add('btn-disabled'); }
+                } catch (e) { console.error("Error parsing stake amount for allowance check:", e); this.elements.stakeButton.disabled = true; this.elements.stakeButton.classList.add('btn-disabled'); }
             },
-
-            // --- User Actions ---
-            async approve() {
-                const amount = this.elements.stakeAmountInput.value;
-                if (!amount || parseFloat(amount) <= 0) {
-                    return this.showMessage('Please enter a valid amount to approve.', 'error');
-                }
+            async approve() { /* ... same as before ... */ 
+                const amountStr = this.elements.stakeAmountInput.value;
+                if (!amountStr || parseFloat(amountStr) <= 0) { return this.showMessage('Please enter a valid amount to approve.', 'error'); }
+                if (typeof ethers === 'undefined') return this.showMessage('Ethers.js not loaded.', 'error');
                 this.showMessage('Requesting approval from your wallet...', 'info');
                 try {
-                    const amountToApprove = ethers.utils.parseUnits(amount, 18);
+                    const amountToApprove = ethers.utils.parseUnits(amountStr, 18);
                     const tx = await this.contracts.srv.approve(this.addresses.stakingVault, amountToApprove);
-                    await tx.wait();
-                    this.showMessage('Approval successful!', 'success');
-                    this.checkAllowance();
-                } catch (error) {
-                    console.error("Approval error:", error);
-                    this.showMessage('Approval failed. Check the console for details.', 'error');
-                }
+                    console.log("Approval transaction sent:", tx.hash); await tx.wait(); console.log("Approval transaction confirmed.");
+                    this.showMessage('Approval successful!', 'success'); await this.checkAllowance();
+                } catch (error) { console.error("Approval error:", error); this.showMessage(error.message || 'Approval failed. Check console.', 'error'); }
             },
-            
-            async stake() {
-                 const amount = this.elements.stakeAmountInput.value;
-                if (!amount || parseFloat(amount) <= 0) {
-                    return this.showMessage('Please enter a valid amount to stake.', 'error');
-                }
+            async stake() { /* ... same as before ... */
+                const amountStr = this.elements.stakeAmountInput.value;
+                if (!amountStr || parseFloat(amountStr) <= 0) { return this.showMessage('Please enter a valid amount to stake.', 'error'); }
+                if (typeof ethers === 'undefined') return this.showMessage('Ethers.js not loaded.', 'error');
                 this.showMessage('Processing your stake transaction...', 'info');
                 try {
-                    const amountToStake = ethers.utils.parseUnits(amount, 18);
+                    const amountToStake = ethers.utils.parseUnits(amountStr, 18);
                     const tx = await this.contracts.stakingVault.stake(amountToStake);
-                    await tx.wait();
-                    this.showMessage('Staking successful!', 'success');
-                    this.elements.stakeAmountInput.value = '';
-                    this.fetchAllData();
-                } catch (error) {
-                    console.error("Staking error:", error);
-                    this.showMessage('Staking failed. Check the console for details.', 'error');
-                }
+                    console.log("Stake transaction sent:", tx.hash); await tx.wait(); console.log("Stake transaction confirmed.");
+                    this.showMessage('Staking successful!', 'success'); this.elements.stakeAmountInput.value = ''; await this.fetchAllData();
+                } catch (error) { console.error("Staking error:", error); this.showMessage(error.message || 'Staking failed. Check console.', 'error'); }
             },
-            
-            async unstake() {
-                 const amount = this.elements.unstakeAmountInput.value;
-                if (!amount || parseFloat(amount) <= 0) {
-                    return this.showMessage('Please enter a valid amount to unstake.', 'error');
-                }
+            async unstake() { /* ... same as before ... */
+                const amountStr = this.elements.unstakeAmountInput.value;
+                if (!amountStr || parseFloat(amountStr) <= 0) { return this.showMessage('Please enter a valid amount to unstake.', 'error'); }
+                if (typeof ethers === 'undefined') return this.showMessage('Ethers.js not loaded.', 'error');
                 this.showMessage('Processing your unstake transaction...', 'info');
                 try {
-                    const amountToUnstake = ethers.utils.parseUnits(amount, 18);
+                    const amountToUnstake = ethers.utils.parseUnits(amountStr, 18);
                     const tx = await this.contracts.stakingVault.unstake(amountToUnstake);
-                    await tx.wait();
-                    this.showMessage('Unstaking successful!', 'success');
-                    this.elements.unstakeAmountInput.value = '';
-                    this.fetchAllData();
-                } catch (error) {
-                    console.error("Unstaking error:", error);
-                    this.showMessage('Unstaking failed. Check the console for details.', 'error');
-                }
+                    console.log("Unstake transaction sent:", tx.hash); await tx.wait(); console.log("Unstake transaction confirmed.");
+                    this.showMessage('Unstaking successful!', 'success'); this.elements.unstakeAmountInput.value = ''; await this.fetchAllData();
+                } catch (error) { console.error("Unstaking error:", error); this.showMessage(error.message || 'Unstaking failed. Check console.', 'error'); }
             },
-            
             async claim() {
+                console.log("Claim function called, using contract.claim()"); // UPDATED FUNCTION NAME
+                if (typeof ethers === 'undefined') return this.showMessage('Ethers.js not loaded.', 'error');
                 this.showMessage('Processing your claim transaction...', 'info');
                 try {
-                    const tx = await this.contracts.rewardDistributor.claimReward();
+                    const tx = await this.contracts.rewardDistributor.claim(); // UPDATED FUNCTION CALL
+                    console.log("Claim transaction sent:", tx.hash);
                     await tx.wait();
+                    console.log("Claim transaction confirmed.");
                     this.showMessage('Rewards claimed successfully!', 'success');
-                    this.fetchAllData();
+                    await this.fetchAllData();
                 } catch (error) {
                     console.error("Claim error:", error);
-                    this.showMessage('Claim failed. Check the console for details.', 'error');
+                    this.showMessage(error.message || 'Claim failed. Check console.', 'error');
                 }
             },
-
-            // --- UI Updates ---
-            updateUIForConnection(address, network) {
-                this.elements.connectButton.classList.add('hidden');
-                this.elements.walletInfo.classList.remove('hidden');
-                this.elements.mainContent.classList.remove('hidden');
-                this.elements.networkName.innerText = `${network.name} (ID: ${network.chainId})`;
-                this.elements.accountAddress.innerText = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+            updateUIForConnection(address, network) { /* ... same as before ... */ 
+                this.elements.connectButton.classList.add('hidden'); this.elements.walletInfo.classList.remove('hidden'); this.elements.mainContent.classList.remove('hidden');
+                this.elements.networkName.innerText = `${network.name} (ID: ${network.chainId})`; this.elements.accountAddress.innerText = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
             },
-
-            showMessage(text, type = 'info', duration = 4000) {
-                this.elements.messageText.innerText = text;
-                const box = this.elements.messageBox;
-                box.className = 'fixed bottom-5 right-5 max-w-sm p-4 rounded-lg shadow-lg text-white'; // Reset classes
-                if (type === 'success') box.classList.add('bg-green-500');
-                else if (type === 'error') box.classList.add('bg-red-500');
-                else box.classList.add('bg-slate-700');
-                box.classList.remove('hidden');
-                setTimeout(() => box.classList.add('hidden'), duration);
+            showMessage(text, type = 'info', duration = 4000) { /* ... same as before ... */ 
+                this.elements.messageText.innerText = text; const box = this.elements.messageBox;
+                box.className = 'fixed bottom-5 right-5 max-w-sm p-4 rounded-lg shadow-lg text-white'; 
+                if (type === 'success') box.classList.add('bg-green-500'); else if (type === 'error') box.classList.add('bg-red-500'); else box.classList.add('bg-slate-700');
+                box.classList.remove('hidden'); setTimeout(() => box.classList.add('hidden'), duration);
             }
         };
-
-        window.addEventListener('load', () => {
-            App.init();
-        });
+        window.addEventListener('load', () => { App.init(); });
     </script>
-
 </body>
 </html>
